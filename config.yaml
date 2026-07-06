@@ -1,9 +1,0 @@
-model:
-  provider: openai
-  model: gpt-5.4-mini
-
-gateway:
-  telegram:
-    enabled: true
-    dm_policy: open
-    group_policy: open
