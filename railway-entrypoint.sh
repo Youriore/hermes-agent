@@ -12,5 +12,5 @@ echo "Starting gateway in background..."
 hermes gateway &
 GW_PID=$!
 
-echo "Starting web dashboard on port $PORT (foreground)..."
-exec hermes dashboard --host 0.0.0.0 --port $PORT --no-open
+echo "Starting web dashboard on port $PORT (foreground, skip-build)..."
+exec hermes dashboard --host 0.0.0.0 --port $PORT --no-open --skip-build
