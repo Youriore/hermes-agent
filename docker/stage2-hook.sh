@@ -407,6 +407,35 @@ seed_one ".env" ".env.example"
 seed_one "config.yaml" "cli-config.yaml.example"
 seed_one "SOUL.md" "docker/SOUL.md"
 
+# --- Inject dashboard basic_auth from env vars ---
+# When HERMES_DASHBOARD_BASIC_AUTH_USERNAME and _PASSWORD are set, ensure
+# the config.yaml has a dashboard.basic_auth section so the basic auth
+# plugin registers on startup.  Uses Python to safely merge into the
+# existing YAML without clobbering other keys.
+if [ -n "${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:-}" ] && [ -n "${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:-}" ]; then
+    if [ -f "$HERMES_HOME/config.yaml" ]; then
+        as_hermes "$INSTALL_DIR/.venv/bin/python" -c "
+import yaml, sys
+path = sys.argv[1]
+with open(path) as f:
+    cfg = yaml.safe_load(f) or {}
+cfg.setdefault('dashboard', {}).setdefault('basic_auth', {})
+changed = False
+if cfg['dashboard']['basic_auth'].get('username') != sys.argv[2]:
+    cfg['dashboard']['basic_auth']['username'] = sys.argv[2]
+    changed = True
+if cfg['dashboard']['basic_auth'].get('password') != sys.argv[3]:
+    cfg['dashboard']['basic_auth']['password'] = sys.argv[3]
+    changed = True
+if changed:
+    with open(path, 'w') as f:
+        yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
+    print('[stage2] Injected dashboard.basic_auth into config.yaml')
+" "$HERMES_HOME/config.yaml" "$HERMES_DASHBOARD_BASIC_AUTH_USERNAME" "$HERMES_DASHBOARD_BASIC_AUTH_PASSWORD" \
+            || echo "[stage2] Warning: dashboard basic_auth injection failed; continuing"
+    fi
+fi
+
 # .env holds API keys and secrets — restrict to owner-only access. Applied
 # unconditionally (not only on first-seed) so a host-mounted .env that was
 # created with a permissive umask gets tightened on every container start.
