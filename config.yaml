@@ -1,0 +1,9 @@
+model:
+  provider: opencode
+  model: gpt-5.4-mini
+  base_url: https://opencode.ai/zen/v1
+
+dashboard:
+  basic_auth:
+    username: admin
+    password: hermes2026
